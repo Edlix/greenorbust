@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/greenorbust/static/css/main.e6c13ad2.css",
+    "main.js": "/greenorbust/static/js/main.940fa9c7.js",
+    "static/js/787.d4aba7ab.chunk.js": "/greenorbust/static/js/787.d4aba7ab.chunk.js",
+    "static/media/logoApp.png": "/greenorbust/static/media/logoApp.87220666afbd60f819a4.png",
+    "index.html": "/greenorbust/index.html",
+    "main.e6c13ad2.css.map": "/greenorbust/static/css/main.e6c13ad2.css.map",
+    "main.940fa9c7.js.map": "/greenorbust/static/js/main.940fa9c7.js.map",
+    "787.d4aba7ab.chunk.js.map": "/greenorbust/static/js/787.d4aba7ab.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.940fa9c7.js"
+  ]
+}
