@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "description": "Buy groceriesss",
+    "checked": false
+  },
+  {
+    "id": 2,
+    "description": "Walk the dog",
+    "checked": false
+  },
+  {
+    "id": 3,
+    "description": "Read a book",
+    "checked": false
+  },
+  {
+    "id": 4,
+    "description": "Does this backend work?",
+    "checked": false
+  }
+]

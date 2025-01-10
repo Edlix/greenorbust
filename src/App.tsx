@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
-import { TextField, Button, Checkbox, List, ListItem, ListItemText, ListItemIcon, Container, Typography, Paper, Tooltip } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, Checkbox, List, ListItem, ListItemText, ListItemIcon, Container, Paper, Tooltip } from '@mui/material';
 import logoUrl from './logoApp.png';
 
 interface TodoItem {
+  id: number;
   description: string;
   checked: boolean;
 }
 
-interface UnfinishedTodosProps {
-  todos: TodoItem[];
-  toggleCheckbox: (index: number) => void;
-  paperBackgroundColor: string;
-}
-const UnfinishedTodos: React.FC<UnfinishedTodosProps> = ({ todos, toggleCheckbox, paperBackgroundColor }) => {
+const UnfinishedTodos: React.FC<{ 
+  todos: TodoItem[]; 
+  toggleCheckbox: (id: number) => void; 
+  updateTodoDescription: (id: number, description: string) => void;
+  paperBackgroundColor: string; 
+}> = ({ todos, toggleCheckbox, updateTodoDescription, paperBackgroundColor }) => {
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newDescription, setNewDescription] = useState<string>('');
+
   const listItemStyle = {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     fontSize: '16px',
@@ -21,24 +25,49 @@ const UnfinishedTodos: React.FC<UnfinishedTodosProps> = ({ todos, toggleCheckbox
     padding: '8px 0',
   };
 
+  const handleEdit = (id: number, currentDescription: string) => {
+    setEditingId(id);
+    setNewDescription(currentDescription);
+  };
+
+  const handleSave = (id: number) => {
+    updateTodoDescription(id, newDescription);
+    setEditingId(null);
+    setNewDescription('');
+  };
+
   return (
     <Paper style={{ marginTop: '20px', border: '1px solid #ccc', padding: '10px', backgroundColor: paperBackgroundColor }}>
       <List>
-        {todos.map((item, index) => (
-          <ListItem key={index} dense>
+        {todos.map((item) => (
+          <ListItem key={item.id} dense>
             <ListItemIcon>
               <Checkbox
                 edge="start"
                 checked={item.checked}
                 tabIndex={-1}
                 disableRipple
-                onChange={() => toggleCheckbox(index)}
+                onChange={() => toggleCheckbox(item.id)}
               />
             </ListItemIcon>
-            <ListItemText 
-              primary={item.description}
-              primaryTypographyProps={{ style: listItemStyle }}
-            />
+            {editingId === item.id ? (
+              <TextField
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                variant="standard"
+                fullWidth
+              />
+            ) : (
+              <ListItemText 
+                primary={item.description}
+                primaryTypographyProps={{ style: listItemStyle }}
+              />
+            )}
+            {editingId === item.id ? (
+              <Button onClick={() => handleSave(item.id)}>Save</Button>
+            ) : (
+              <Button onClick={() => handleEdit(item.id, item.description)}>Edit</Button>
+            )}
           </ListItem>
         ))}
       </List>
@@ -46,17 +75,14 @@ const UnfinishedTodos: React.FC<UnfinishedTodosProps> = ({ todos, toggleCheckbox
   );
 };
 
-
-interface TodoControlsProps {
-  newTodoDescription: string;
-  setNewTodoDescription: React.Dispatch<React.SetStateAction<string>>;
-  addItemToDo: () => void;
-  deleteToDoItem: () => void;
-  addItemButtonColor: string;
-  deleteItemButtonColor: string;
-}
-
-const TodoControls: React.FC<TodoControlsProps> = ({ newTodoDescription, setNewTodoDescription, addItemToDo, deleteToDoItem, addItemButtonColor, deleteItemButtonColor }) => {
+const TodoControls: React.FC<{ 
+  newTodoDescription: string; 
+  setNewTodoDescription: React.Dispatch<React.SetStateAction<string>>; 
+  addItemToDo: () => void; 
+  deleteToDoItem: () => void; 
+  addItemButtonColor: string; 
+  deleteItemButtonColor: string; 
+}> = ({ newTodoDescription, setNewTodoDescription, addItemToDo, deleteToDoItem, addItemButtonColor, deleteItemButtonColor }) => {
   return (
     <div style={{ textAlign: 'center', marginBottom: '20px' }}>
       <TextField
@@ -89,29 +115,70 @@ const ToDoList: React.FC = () => {
   const [todos, setTodos] = useState<TodoItem[]>([]);
 
   const paperBackgroundColor = '#e8f5e9';
-  const addItemButtonColor = '#a7c7e7';
-  const deleteItemButtonColor = '#e7a7a7';
+  const addItemButtonColor = '#4CAF50'; // Brighter green
+  const deleteItemButtonColor = '#F44336'; // Brighter red
+
+  useEffect(() => {
+    fetch('http://localhost:5000/todos')
+      .then(response => response.json())
+      .then(data => setTodos(data))
+      .catch(error => console.error('Error fetching todos:', error));
+  }, []);
 
   const addItemToDo = () => {
-    const newTodo: TodoItem = {
-      description: newTodoDescription,
-      checked: false,
-    };
-    setTodos([...todos, newTodo]);
-    setNewTodoDescription('');
+    if (!newTodoDescription.trim()) return;
+    fetch('http://localhost:5000/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: newTodoDescription }),
+    })
+      .then(response => response.json())
+      .then(newTodo => {
+        setTodos([...todos, newTodo]);
+        setNewTodoDescription('');
+      })
+      .catch(error => console.error('Error adding todo:', error));
   };
 
-  const toggleCheckbox = (index: number) => {
-    const newTodos = [...todos];
-    newTodos[index].checked = !newTodos[index].checked;
-    setTodos(newTodos);
+  const toggleCheckbox = (id: number) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    fetch(`http://localhost:5000/todos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ checked: !todo.checked }),
+    })
+      .then(response => response.json())
+      .then(updatedTodo => {
+        setTodos(todos.map(t => (t.id === id ? updatedTodo : t)));
+      })
+      .catch(error => console.error('Error updating todo:', error));
+  };
+
+  const updateTodoDescription = (id: number, description: string) => {
+    fetch(`http://localhost:5000/todos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description }),
+    })
+      .then(response => response.json())
+      .then(updatedTodo => {
+        setTodos(todos.map(t => (t.id === id ? updatedTodo : t)));
+      })
+      .catch(error => console.error('Error updating todo:', error));
   };
 
   const deleteToDoItem = () => {
-    const remainingTodos = todos.filter(todo => !todo.checked);
-    setTodos(remainingTodos);
-  }
-//
+    const checkedTodos = todos.filter(t => t.checked);
+    checkedTodos.forEach(todo => {
+      fetch(`http://localhost:5000/todos/${todo.id}`, { method: 'DELETE' })
+        .then(() => {
+          setTodos(todos.filter(t => t.id !== todo.id));
+        })
+        .catch(error => console.error('Error deleting todo:', error));
+    });
+  };
+
   return (
     <Container maxWidth="sm" style={{ backgroundColor: '#c8e6c9', minHeight: '100vh', padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
@@ -130,6 +197,7 @@ const ToDoList: React.FC = () => {
       <UnfinishedTodos
         todos={todos}
         toggleCheckbox={toggleCheckbox}
+        updateTodoDescription={updateTodoDescription}
         paperBackgroundColor={paperBackgroundColor}
       />
     </Container>
