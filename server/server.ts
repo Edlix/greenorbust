@@ -13,6 +13,7 @@ interface TodoItem {
   id: number;
   description: string;
   checked: boolean;
+  deadline: string;
 }
 
 const DATA_FILE = path.join(__dirname, 'todos.json');
@@ -47,14 +48,15 @@ app.get('/todos', (req: Request, res: Response) => {
 });
 
 app.post('/todos', async (req: Request, res: Response) => {
-  const { description } = req.body;
-  if (!description) {
-    return res.status(400).json({ message: 'Description is required' });
+  const { description, deadline } = req.body;
+  if (!description || !deadline) {
+    return res.status(400).json({ message: 'Description and deadline are required' });
   }
   const newTodo: TodoItem = {
     id: todos.length ? todos[todos.length - 1].id + 1 : 1,
     description,
     checked: false,
+    deadline, // Assign deadline
   };
   todos.push(newTodo);
   await saveTodos();
@@ -63,11 +65,12 @@ app.post('/todos', async (req: Request, res: Response) => {
 
 app.put('/todos/:id', async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
-  const { description, checked } = req.body;
+  const { description, checked, deadline } = req.body;
   const todo = todos.find(t => t.id === id);
   if (todo) {
     if (description !== undefined) todo.description = description;
     if (checked !== undefined) todo.checked = checked;
+    if (deadline !== undefined) todo.deadline = deadline;
     await saveTodos();
     res.json(todo);
   } else {
@@ -75,7 +78,6 @@ app.put('/todos/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Delete a todo
 app.delete('/todos/:id', async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
   const index = todos.findIndex(t => t.id === id);
@@ -88,7 +90,6 @@ app.delete('/todos/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Start Server
 const startServer = async () => {
   await loadTodos();
   app.listen(PORT, () => {
