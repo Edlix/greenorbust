@@ -200,13 +200,14 @@ const ToDoList: React.FC = () => {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const BASE_URL = process.env.NODE_ENV === 'development' ? '' : 'http://localhost:5000';
 
   const paperBackgroundColor = '#e8f5e9';
   const addItemButtonColor = '#4CAF50';
   const deleteItemButtonColor = '#F44336';
 
   useEffect(() => {
-    fetch('http://localhost:5000/todos')
+    fetch(`${BASE_URL}/todos`)
       .then(response => response.json())
       .then(data => setTodos(data))
       .catch(error => console.error('Error fetching todos:', error));
@@ -214,7 +215,7 @@ const ToDoList: React.FC = () => {
 
   const addItemToDo = () => {
     if (!newTodoDescription.trim() || !newTodoDeadline.trim()) return;
-    fetch('http://localhost:5000/todos', {
+    fetch(`${BASE_URL}/todos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -234,7 +235,7 @@ const ToDoList: React.FC = () => {
   const toggleCheckbox = (id: number) => {
     const todo = todos.find(t => t.id === id);
     if (!todo) return;
-    fetch(`http://localhost:5000/todos/${id}`, {
+    fetch(`${BASE_URL}/todos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checked: !todo.checked }),
@@ -254,7 +255,7 @@ const ToDoList: React.FC = () => {
     const body: any = { description };
     if (deadline) body.deadline = deadline;
   
-    fetch(`http://localhost:5000/todos/${id}`, {
+    fetch(`${BASE_URL}/todos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -269,7 +270,7 @@ const ToDoList: React.FC = () => {
   const deleteToDoItem = () => {
     const checkedTodos = todos.filter(t => t.checked);
     checkedTodos.forEach(todo => {
-      fetch(`http://localhost:5000/todos/${todo.id}`, { method: 'DELETE' })
+      fetch(`${BASE_URL}/todos/${todo.id}`, { method: 'DELETE' })
         .then(() => {
           setTodos(todos.filter(t => t.id !== todo.id));
         })

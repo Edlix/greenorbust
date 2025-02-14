@@ -1,0 +1,17 @@
+# server/Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy all the source code (including server.ts and the data folder)
+COPY . .
+
+# Expose the port that your server uses (e.g., 5000)
+EXPOSE 5000
+
+# Run the server (make sure package.json has "start": "ts-node server.ts" or similar)
+CMD ["npm", "start"]

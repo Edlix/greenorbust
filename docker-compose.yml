@@ -1,0 +1,12 @@
+services:
+  client:
+    build:
+      context: ./client
+    ports:
+      - "3000:80"
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server/data:/app/data

@@ -16,7 +16,7 @@ interface TodoItem {
   deadline: string;
 }
 
-const DATA_FILE = path.join(__dirname, 'todos.json');
+const DATA_FILE = path.join(__dirname, 'data', 'todos.json');
 
 let todos: TodoItem[] = [];
 
@@ -56,7 +56,7 @@ app.post('/todos', async (req: Request, res: Response) => {
     id: todos.length ? todos[todos.length - 1].id + 1 : 1,
     description,
     checked: false,
-    deadline, // Assign deadline
+    deadline,
   };
   todos.push(newTodo);
   await saveTodos();
